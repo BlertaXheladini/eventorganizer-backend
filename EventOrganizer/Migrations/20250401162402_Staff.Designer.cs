@@ -4,6 +4,7 @@ using EventOrganizer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventOrganizer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250401162402_Staff")]
+    partial class Staff
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -60,57 +63,6 @@ namespace EventOrganizer.Migrations
 
                     b.ToTable("EventThemes");
                 });
-
-            modelBuilder.Entity("OrganizingEvents.Models.Staff", b =>
-            {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
-
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                b.Property<string>("ContactNumber")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("FistName")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("Image")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("LastName")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("Position")
-                    .HasColumnType("nvarchar(max)");
-
-                b.HasKey("Id");
-
-                b.ToTable("Staff");
-            });
-
-            modelBuilder.Entity("OrganizingEvents.Models.Contact", b =>
-            {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
-
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                b.Property<string>("Email")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("Message")
-                    .HasColumnType("nvarchar(max)");
-
-                b.Property<string>("Name")
-                    .HasColumnType("nvarchar(max)");
-
-                b.HasKey("Id");
-
-                b.ToTable("Contact");
-            });
-
 
             modelBuilder.Entity("OrganizingEvents.Models.Events", b =>
                 {

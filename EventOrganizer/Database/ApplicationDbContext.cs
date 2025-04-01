@@ -8,6 +8,8 @@ namespace EventOrganizer.Database
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
           : base(options)
         { }
+        public DbSet<Contact> Contact { get; set; }
+        public DbSet<Staff> Staff { get; set; }
         public DbSet<Events> Events { get; set; }
         public DbSet<EventCategories> EventCategories { get; set; }
         public DbSet<EventThemes> EventThemes { get; set; }
