@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
 namespace EventOrganizer.Database
 {
     public class ApplicationDbContext : DbContext
@@ -7,5 +6,8 @@ namespace EventOrganizer.Database
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
           : base(options)
         { }
+
+        public DbSet<EventCategories> EventCategories { get; set; }
     }
 }
+
