@@ -41,7 +41,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Event Organizer API V1");
-        c.RoutePrefix = string.Empty; // Swagger do të jetë në root URL
+        c.RoutePrefix = "swagger"; // Swagger do të jetë në root URL
     });
 }
 
