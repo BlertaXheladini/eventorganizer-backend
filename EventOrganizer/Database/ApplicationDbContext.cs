@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using EventOrganizer.Models;
 namespace EventOrganizer.Database
 {
     public class ApplicationDbContext : DbContext
