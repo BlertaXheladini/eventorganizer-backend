@@ -45,5 +45,31 @@ namespace EventOrganizer.Controllers
             await _db.SaveChangesAsync();
             return Created($"/GetEventThemesById/{themes.Id}", themes);
         }
+
+
+        //Update
+        [HttpPut]
+        [Route("Update")]
+        public async Task<IActionResult> PutAsync(EventThemes themes)
+        {
+            _db.EventThemes.Update(themes);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
+
+        //Delete
+        [Route("Delete")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAsync(int Id)
+        {
+            var eventthemesIdDelete = await _db.EventThemes.FindAsync(Id);
+            if (eventthemesIdDelete == null)
+            {
+                return NotFound();
+            }
+            _db.EventThemes.Remove(eventthemesIdDelete);
+            await _db.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

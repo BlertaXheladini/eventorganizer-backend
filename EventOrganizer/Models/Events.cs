@@ -1,7 +1,6 @@
-﻿using EventOrganizer.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace OrganizingEvents.Models
+namespace EventOrganizer.Models
 {
     public class Events
     {
