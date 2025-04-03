@@ -9,6 +9,7 @@ namespace EventOrganizer.Database
           : base(options)
         { }
         public DbSet<Contact> Contact { get; set; }
+        public DbSet<RestaurantTypes> RestaurantTypes { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<Events> Events { get; set; }
         public DbSet<EventCategories> EventCategories { get; set; }
