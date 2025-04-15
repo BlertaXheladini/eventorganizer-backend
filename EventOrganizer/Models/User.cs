@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace OrganizingEvents.Models
+namespace EventOrganizer.Models // Fixed the namespace here
 {
     public class User
     {

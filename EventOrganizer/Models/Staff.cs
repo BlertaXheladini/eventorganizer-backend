@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace OrganizingEvents.Models
+namespace EventOrganizer.Models  // Fixed the namespace here
 {
     public class Staff
     {
         [Key]
         public int Id { get; set; }
 
-        public string FistName { get; set; }
+        public string FirstName { get; set; }
 
         public string LastName { get; set; }
 
@@ -16,6 +16,5 @@ namespace OrganizingEvents.Models
         public string ContactNumber { get; set; }
 
         public string Image { get; set; }
-
     }
 }

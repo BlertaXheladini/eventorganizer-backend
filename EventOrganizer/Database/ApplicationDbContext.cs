@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EventOrganizer.Models;
-using OrganizingEvents.Models;
 
 namespace EventOrganizer.Database
 {
@@ -10,12 +9,10 @@ namespace EventOrganizer.Database
           : base(options)
         { }
 
-        public DbSet<Contact> Contact { get; set; }
         public DbSet<Staff> Staff { get; set; }
         public DbSet<Events> Events { get; set; }
         public DbSet<EventCategories> EventCategories { get; set; }
         public DbSet<EventThemes> EventThemes { get; set; }
-        public DbSet<RestaurantTypes> RestaurantTypes { get; set; }
         public DbSet<User> User { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,9 +36,6 @@ namespace EventOrganizer.Database
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
-
-            // Suppress the PendingModelChangesWarning
-            optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         }
     }
 }
