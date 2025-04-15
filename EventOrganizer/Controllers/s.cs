@@ -7,11 +7,11 @@ namespace EventOrganizer.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EventCategoriesController : ControllerBase
+    public class EventThemesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
 
-        public EventCategoriesController(ApplicationDbContext db)
+        public EventThemesController(ApplicationDbContext db)
         {
             _db = db;
         }
@@ -21,57 +21,55 @@ namespace EventOrganizer.Controllers
         [Route("GetAllList")]
         public async Task<IActionResult> GetAsync()
         {
-            var category = await _db.EventCategories.ToListAsync();
-            return Ok(category);
+            var themes = await _db.EventThemes.ToListAsync();
+            return Ok(themes);
         }
 
 
         //GetById
         [HttpGet]
-        [Route("GetEventCategoriesById")]
-        public async Task<IActionResult> GetEventCategoriesByIdAsync(int Id)
+        [Route("GetEventThemesById")]
+        public async Task<IActionResult> GetEventThemesByIdAsync(int Id)
         {
-            var category = await _db.EventCategories.FindAsync(Id);
-            return Ok(category);
+            var themes = await _db.EventThemes.FindAsync(Id);
+            return Ok(themes);
         }
 
 
         //Add
         [HttpPost]
         [Route("Add")]
-        public async Task<IActionResult> PostAsync(EventCategories category)
+        public async Task<IActionResult> PostAsync(EventThemes themes)
         {
-            _db.EventCategories.Add(category);
+            _db.EventThemes.Add(themes);
             await _db.SaveChangesAsync();
-            return Created($"/GetEventCategoriesById/{category.Id}", category);
+            return Created($"/GetEventThemesById/{themes.Id}", themes);
         }
 
 
         //Update
         [HttpPut]
         [Route("Update/{id}")]
-        public async Task<IActionResult> PutAsync(EventCategories categories)
+        public async Task<IActionResult> PutAsync(EventThemes themes)
         {
-            _db.EventCategories.Update(categories);
+            _db.EventThemes.Update(themes);
             await _db.SaveChangesAsync();
             return NoContent();
         }
-
 
         //Delete
         [Route("Delete")]
         [HttpDelete]
         public async Task<IActionResult> DeleteAsync(int Id)
         {
-            var eventcategoriesIdDelete = await _db.EventCategories.FindAsync(Id);
-            if (eventcategoriesIdDelete == null)
+            var eventthemesIdDelete = await _db.EventThemes.FindAsync(Id);
+            if (eventthemesIdDelete == null)
             {
                 return NotFound();
             }
-            _db.EventCategories.Remove(eventcategoriesIdDelete);
+            _db.EventThemes.Remove(eventthemesIdDelete);
             await _db.SaveChangesAsync();
             return NoContent();
         }
-
     }
 }
