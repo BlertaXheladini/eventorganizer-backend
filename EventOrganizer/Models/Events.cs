@@ -9,11 +9,6 @@ namespace EventOrganizer.Models
         public string EventName { get; set; }
         public string Description { get; set; }
 
-        public DateTime Date { get; set; }
-
-        public string Location { get; set; }
-
-        public int Capacity { get; set; }
         public string Image { get; set; }
 
         public string Price { get; set; }
