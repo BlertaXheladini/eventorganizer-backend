@@ -1,6 +1,7 @@
 using EventOrganizer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,12 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Event Organizer API", Version = "v1" });
 });
+
+
+// MongoDB ConnectionString
+var mongoConnectionString = "mongodb://localhost:27017";
+builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
+
 
 // Configure Database Connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
