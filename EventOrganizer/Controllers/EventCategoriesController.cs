@@ -49,7 +49,7 @@ namespace EventOrganizer.Controllers
 
         //Update
         [HttpPut]
-        [Route("Update/{id}")]
+        [Route("Update")]
         public async Task<IActionResult> PutAsync(EventCategories categories)
         {
             _db.EventCategories.Update(categories);
