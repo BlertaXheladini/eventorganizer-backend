@@ -6,7 +6,9 @@ namespace EventOrganizer.Models
     {
         [Key]
         public int Id { get; set; }
+
         public string EventName { get; set; }
+
         public string Description { get; set; }
 
         public string Image { get; set; }
@@ -14,7 +16,9 @@ namespace EventOrganizer.Models
         public string Price { get; set; }
 
         public int CategoryId { get; set; }
+
         public int ThemeId { get; set; }
+
         public EventCategories EventCategories { get; set; }
 
         public EventThemes EventThemes { get; set; }
