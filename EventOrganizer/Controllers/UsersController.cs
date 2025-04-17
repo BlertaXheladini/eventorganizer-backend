@@ -2,11 +2,12 @@
 using EventOrganizer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Azure.Core;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace EventOrganizer.Controllers
@@ -97,6 +98,67 @@ namespace EventOrganizer.Controllers
             _db.User.Add(objUser);
             await _db.SaveChangesAsync();
             return Ok("Regjistrimi u shtua me sukses.");
+        }
+
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login(Login user)
+        {
+            var userInDb = await _db.User.SingleOrDefaultAsync(u => u.Email == user.Email);
+            if (userInDb == null || !BCrypt.Net.BCrypt.Verify(user.Password, userInDb.Password))
+            {
+                return BadRequest("Emaili ose Fjalekalimi gabim.");
+            }
+
+            var tokens = GenerateTokens(userInDb);
+            userInDb.RefreshToken = tokens.RefreshToken;
+            userInDb.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { AccessToken = tokens.AccessToken, RefreshToken = tokens.RefreshToken });
+        }
+
+        private (string AccessToken, string RefreshToken) GenerateTokens(User user)
+        {
+            var userInDb = _db.User.SingleOrDefault(u => u.Email == user.Email);
+            var existinState = _db.Roles.Find(userInDb.RoleId);
+
+            var claims = new[]
+            {
+                 new Claim(ClaimTypes.Name, user.Email),
+                 new Claim(ClaimTypes.Role, existinState.Name),
+                 new Claim(ClaimTypes.NameIdentifier,user.Id.ToString())
+             };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSecretKeyWithAtLeast16Characters"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var accessToken = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(60),
+                signingCredentials: creds);
+
+            var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            return (new JwtSecurityTokenHandler().WriteToken(accessToken), refreshToken);
+        }
+
+        [HttpPost]
+        [Route("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(string refreshToken)
+        {
+            var userInDb = await _db.User.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken && u.RefreshTokenExpiryTime > DateTime.UtcNow);
+            if (userInDb == null)
+            {
+                return BadRequest("Invalid or expired refresh token.");
+            }
+
+
+            var newTokens = GenerateTokens(userInDb);
+            userInDb.RefreshToken = newTokens.RefreshToken;
+            await _db.SaveChangesAsync();
+
+            return Ok(new { AccessToken = newTokens.AccessToken, RefreshToken = newTokens.RefreshToken });
         }
 
     }
