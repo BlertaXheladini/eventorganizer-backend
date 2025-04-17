@@ -16,6 +16,7 @@ namespace EventOrganizer.Database
         public DbSet<User> User { get; set; }
         public DbSet<Contact> Contact { get; set; }
         public DbSet<Roles> Roles { get; set; }
+        public DbSet<Feedback> Feedback { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,6 +39,18 @@ namespace EventOrganizer.Database
                 .HasOne(p => p.Role)
                 .WithMany()
                 .HasForeignKey(p => p.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId) //Foreign Key
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Feedback>()
+                .HasOne(p => p.Events)
+                .WithMany()
+                .HasForeignKey(p => p.EventsId) //Foreign Key
                 .OnDelete(DeleteBehavior.Restrict);
         }
 
