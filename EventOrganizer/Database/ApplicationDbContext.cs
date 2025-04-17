@@ -15,6 +15,7 @@ namespace EventOrganizer.Database
         public DbSet<EventThemes> EventThemes { get; set; }
         public DbSet<User> User { get; set; }
         public DbSet<Contact> Contact { get; set; }
+        public DbSet<Roles> Roles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
