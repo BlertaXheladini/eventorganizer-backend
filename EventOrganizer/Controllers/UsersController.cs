@@ -71,33 +71,78 @@ namespace EventOrganizer.Controllers
             return NoContent();
         }
 
+        [HttpGet]
+        [Route("GetAvailableRoles")]
+        public async Task<IActionResult> GetAvailableRoles()
+        {
+            var roles = await _db.Roles.ToListAsync();
+            return Ok(roles);
+        }
 
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register(User objUser)
         {
-            var dbuser = _db.User.Where(u => u.Email == objUser.Email).FirstOrDefault();
-            if (dbuser != null)
+            try
             {
-                return BadRequest("Emaili ekziston");
-            }
+                // Validate required fields
+                if (string.IsNullOrEmpty(objUser.Email))
+                {
+                    return BadRequest("Email is required");
+                }
+                
+                if (string.IsNullOrEmpty(objUser.Password))
+                {
+                    return BadRequest("Password is required");
+                }
+                
+                if (string.IsNullOrEmpty(objUser.FirstName))
+                {
+                    return BadRequest("First name is required");
+                }
+                
+                if (string.IsNullOrEmpty(objUser.LastName))
+                {
+                    return BadRequest("Last name is required");
+                }
 
-            var exisstingState = await _db.Roles.FindAsync(objUser.RoleId);
-            if (exisstingState == null)
+                // Check if email already exists
+                var dbuser = await _db.User.FirstOrDefaultAsync(u => u.Email == objUser.Email);
+                if (dbuser != null)
+                {
+                    return BadRequest("Email already exists");
+                }
+
+                // Check if role exists
+                var existingRole = await _db.Roles.FindAsync(objUser.RoleId);
+                if (existingRole == null)
+                {
+                    // Get available roles to help the user
+                    var availableRoles = await _db.Roles.ToListAsync();
+                    var roleIds = string.Join(", ", availableRoles.Select(r => r.Id));
+                    
+                    return BadRequest($"Role with ID {objUser.RoleId} does not exist. Available role IDs are: {roleIds}");
+                }
+
+                // Set role
+                objUser.Role = existingRole;
+                objUser.RefreshTokenExpiryTime = DateTime.UtcNow;
+
+                // Hash password
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(objUser.Password, salt);
+                objUser.Password = hashedPassword;
+
+                // Add user to database
+                _db.User.Add(objUser);
+                await _db.SaveChangesAsync();
+                
+                return Ok("Registration successful");
+            }
+            catch (Exception ex)
             {
-                return NotFound($"Roli me ID {objUser.Role.Id} nuk ekziston");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-
-            objUser.Role = exisstingState;
-            objUser.RefreshTokenExpiryTime = objUser.RefreshTokenExpiryTime ?? DateTime.UtcNow;
-
-            string salt = BCrypt.Net.BCrypt.GenerateSalt();
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(objUser.Password, salt);
-
-            objUser.Password = hashedPassword;
-            _db.User.Add(objUser);
-            await _db.SaveChangesAsync();
-            return Ok("Regjistrimi u shtua me sukses.");
         }
 
         [HttpPost]
