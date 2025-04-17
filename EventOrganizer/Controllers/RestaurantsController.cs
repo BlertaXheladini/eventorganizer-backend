@@ -14,7 +14,7 @@ namespace EventOrganizer.Controllers
 
         public RestaurantsController(IMongoClient client)
         {
-            var database = client.GetDatabase("OrganizingEventsTest");
+            var database = client.GetDatabase("OrganizingEvents");
             _restaurants = database.GetCollection<Restaurants>("Restaurants");
             _restaurantTypes = database.GetCollection<RestaurantTypes>("RestaurantTypes");
         }
@@ -150,10 +150,10 @@ namespace EventOrganizer.Controllers
 
 
         [HttpGet("TestSwagger")]
-        public IActionResult TestSwagger()
-        {
-            return Ok("Swagger is working!");
-        }
+public IActionResult TestSwagger()
+{
+    return Ok("Swagger is working!");
+}
 
     }
 }
