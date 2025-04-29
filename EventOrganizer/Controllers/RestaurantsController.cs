@@ -149,6 +149,30 @@ namespace EventOrganizer.Controllers
         }
 
 
+        // Search Restaurants by Name
+        [HttpGet("SearchRestaurant")]
+        public async Task<IActionResult> SearchRestaurantAsync([FromQuery] string searchRestaurant)
+        {
+            if (string.IsNullOrEmpty(searchRestaurant))
+            {
+                return BadRequest("Search term cannot be empty.");
+            }
+
+            // Kërko restorantet ku emri përputhet me kërkimin
+            var restaurants = await _restaurants
+                .Find(r => r.Name.ToLower().Contains(searchRestaurant.ToLower()))
+                .ToListAsync();
+
+            if (restaurants == null || restaurants.Count == 0)
+            {
+                return NotFound("No matching restaurants found.");
+            }
+
+            return Ok(restaurants);
+        }
+
+
+
         [HttpGet("TestSwagger")]
 public IActionResult TestSwagger()
 {
