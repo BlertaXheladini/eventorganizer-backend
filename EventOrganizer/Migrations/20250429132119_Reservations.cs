@@ -19,7 +19,7 @@ namespace EventOrganizer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Surname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ReservationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReservationDate = table.Column<DateOnly>(type: "datetime2", nullable: false),
                     TotalPrice = table.Column<double>(type: "float", nullable: false),
                     UserID = table.Column<int>(type: "int", nullable: false),
                     EventID = table.Column<int>(type: "int", nullable: false)
