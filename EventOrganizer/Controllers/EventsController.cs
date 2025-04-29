@@ -30,14 +30,17 @@ namespace OrganizingEvents.Controllers
 
 
         //GetById
-        [HttpGet]
-        [Route("GetEventsById")]
-        public async Task<IActionResult> GetEventsByIdAsync(int Id)
+        [HttpGet("GetEventById/{id}")]
+        public async Task<IActionResult> GetEventsByIdAsync(int id)
         {
             var events = await _db.Events
                 .Include(q => q.EventThemes)
                 .Include(q => q.EventCategories)
-                .FirstOrDefaultAsync(q => q.Id == Id);
+                .FirstOrDefaultAsync(q => q.Id == id);
+            if (events == null)
+            {
+                return NotFound();
+            }
             return Ok(events);
         }
 
