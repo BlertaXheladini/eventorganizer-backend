@@ -51,9 +51,29 @@ namespace EventOrganizer.Controllers
 
         [HttpPut]
         [Route("UpdateUser")]
-        public async Task<IActionResult> PutAsync(User user)
+        public async Task<IActionResult> PutAsync(User updatedUser)
         {
-            _db.User.Update(user);
+            var existingUser = await _db.User.FindAsync(updatedUser.Id);
+
+            if (existingUser == null)
+            {
+                return NotFound();
+            }
+
+            existingUser.FirstName = updatedUser.FirstName;
+            existingUser.LastName = updatedUser.LastName;
+            existingUser.Email = updatedUser.Email;
+            existingUser.RoleId = updatedUser.RoleId;
+
+            if (!string.IsNullOrEmpty(updatedUser.Password))
+            {
+                // Hash the new password
+                string salt = BCrypt.Net.BCrypt.GenerateSalt();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(updatedUser.Password, salt);
+                existingUser.Password = hashedPassword;
+            }
+
+            _db.User.Update(existingUser);
             await _db.SaveChangesAsync();
             return NoContent();
         }
