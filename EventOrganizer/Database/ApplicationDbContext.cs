@@ -17,6 +17,7 @@ namespace EventOrganizer.Database
         public DbSet<Contact> Contact { get; set; }
         public DbSet<Roles> Roles { get; set; }
         public DbSet<Feedback> Feedback { get; set; }
+        public DbSet<Reservations> Reservations { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -52,6 +53,18 @@ namespace EventOrganizer.Database
                 .WithMany()
                 .HasForeignKey(p => p.EventsId) //Foreign Key
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Reservations>()
+           .HasOne(p => p.User)
+           .WithMany()
+           .HasForeignKey(p => p.UserID)
+           .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Reservations>()
+           .HasOne(p => p.Event)
+           .WithMany()
+           .HasForeignKey(p => p.EventID)
+           .OnDelete(DeleteBehavior.Restrict);
         }
 
         // Add the OnConfiguring method here to suppress warnings

@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Azure.Core;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace EventOrganizer.Controllers
