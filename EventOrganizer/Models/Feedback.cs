@@ -9,17 +9,19 @@ namespace EventOrganizer.Models
         [Key]
         public int Id { get; set; }
 
+        [Required]
+        [Range(1, 5)]
         public int Rating { get; set; }
 
-        public string Comment { get; set; }
+        [Required]
+        public string Name { get; set; }
 
-        public DateTime Date { get; set; }
+        public string Surname { get; set; }
 
-        public int UserId { get; set; }
+        public string Comments { get; set; }
 
+        [Required]
         public int EventsId { get; set; }
-
-        public User User { get; set; }
 
         public Events Events { get; set; }
     }

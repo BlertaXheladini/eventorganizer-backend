@@ -42,11 +42,6 @@ namespace EventOrganizer.Database
                 .HasForeignKey(p => p.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Feedback>()
-                .HasOne(p => p.User)
-                .WithMany()
-                .HasForeignKey(p => p.UserId) //Foreign Key
-                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Feedback>()
                 .HasOne(p => p.Events)
