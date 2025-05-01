@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using EventOrganizer.Models;
 using EventOrganizer.Database;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace OrganizingEvents.Controllers
 {
@@ -16,7 +18,7 @@ namespace OrganizingEvents.Controllers
             _db = db;
         }
 
-        //ListAll
+        // ListAll
         [HttpGet]
         [Route("GetAllList")]
         public async Task<IActionResult> GetAsync()
@@ -28,8 +30,7 @@ namespace OrganizingEvents.Controllers
             return Ok(events);
         }
 
-
-        //GetById
+        // GetById
         [HttpGet("GetEventById/{id}")]
         public async Task<IActionResult> GetEventsByIdAsync(int id)
         {
@@ -44,24 +45,23 @@ namespace OrganizingEvents.Controllers
             return Ok(events);
         }
 
-
-        //Add
+        // Add
         [HttpPost]
         [Route("Add")]
         public async Task<IActionResult> PostAsync(Events events)
         {
-            // Kontrollo nëse EventThemes ekziston
+            // Check if EventThemes exists
             var existingEventThemes = await _db.EventThemes.FindAsync(events.ThemeId);
             if (existingEventThemes == null)
             {
-                return NotFound($"EventThemes me ID {events.ThemeId} nuk ekziston.");
+                return NotFound($"EventThemes with ID {events.ThemeId} does not exist.");
             }
 
-            // Kontrollo nëse EventCategories ekziston
+            // Check if EventCategories exists
             var existingEventCategories = await _db.EventCategories.FindAsync(events.CategoryId);
             if (existingEventCategories == null)
             {
-                return NotFound($"EventCategories me ID {events.CategoryId} nuk ekziston.");
+                return NotFound($"EventCategories with ID {events.CategoryId} does not exist.");
             }
 
             events.EventThemes = existingEventThemes;
@@ -72,24 +72,23 @@ namespace OrganizingEvents.Controllers
             return Created($"/GetEventsById/{events.Id}", events);
         }
 
-
-        //Update
+        // Update
         [HttpPut]
         [Route("Update/{id}")]
         public async Task<IActionResult> PutAsync(Events events)
         {
-            // Kontrollo nëse EventThemes ekziston
+            // Check if EventThemes exists
             var existingEventThemes = await _db.EventThemes.FindAsync(events.ThemeId);
             if (existingEventThemes == null)
             {
-                return NotFound($"EventThemes me ID {events.ThemeId} nuk ekziston.");
+                return NotFound($"EventThemes with ID {events.ThemeId} does not exist.");
             }
 
-            // Kontrollo nëse EventCategories ekziston
+            // Check if EventCategories exists
             var existingEventCategories = await _db.EventCategories.FindAsync(events.CategoryId);
             if (existingEventCategories == null)
             {
-                return NotFound($"EventCategories me ID {events.CategoryId} nuk ekziston.");
+                return NotFound($"EventCategories with ID {events.CategoryId} does not exist.");
             }
 
             events.EventThemes = existingEventThemes;
@@ -100,8 +99,7 @@ namespace OrganizingEvents.Controllers
             return NoContent();
         }
 
-
-        //Delete
+        // Delete
         [Route("Delete")]
         [HttpDelete]
         public async Task<IActionResult> DeleteAsync(int Id)
@@ -121,7 +119,6 @@ namespace OrganizingEvents.Controllers
             return NoContent();
         }
 
-
         // Search Events by Name
         [HttpGet("SearchEvent")]
         public async Task<IActionResult> SearchEventAsync([FromQuery] string searchEvent)
@@ -140,8 +137,7 @@ namespace OrganizingEvents.Controllers
             return Ok(events);
         }
 
-
-        //Order Events by Price
+        // Order Events by Price
         [HttpGet("SortEvents")]
         public async Task<IActionResult> SortEvents(string sortOrder)
         {
@@ -159,6 +155,59 @@ namespace OrganizingEvents.Controllers
             return Ok(events);
         }
 
+        // Export Events to Excel
+        [HttpGet]
+        [Route("ExportEventsToExcel")]
+        public async Task<IActionResult> ExportEventsToExcel()
+        {
+            // Fetch all events along with their themes and categories
+            var events = await _db.Events
+                .Include(e => e.EventThemes)
+                .Include(e => e.EventCategories)
+                .ToListAsync();
 
+            // Prepare data for export
+            var eventsForExport = events.Select(e => new
+            {
+                EventId = e.Id,
+                EventName = e.EventName,
+                Description = e.Description,
+                Image = e.Image,
+                Price = e.Price,
+                EventTheme = e.EventThemes?.ThemeName,
+                EventCategory = e.EventCategories?.CategoryName,
+            }).ToList();
+
+            // Create Excel file using ClosedXML
+            var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Events");
+
+            worksheet.Cell(1, 1).Value = "EventId";
+            worksheet.Cell(1, 2).Value = "EventName";
+            worksheet.Cell(1, 3).Value = "Description";
+            worksheet.Cell(1, 4).Value = "Image";
+            worksheet.Cell(1, 5).Value = "Price";
+            worksheet.Cell(1, 6).Value = "EventTheme";
+            worksheet.Cell(1, 7).Value = "EventCategory";
+
+            int row = 2;
+            foreach (var ev in eventsForExport)
+            {
+                worksheet.Cell(row, 1).Value = ev.EventId;
+                worksheet.Cell(row, 2).Value = ev.EventName;
+                worksheet.Cell(row, 3).Value = ev.Description;
+                worksheet.Cell(row, 4).Value = ev.Image;
+                worksheet.Cell(row, 5).Value = ev.Price;
+                worksheet.Cell(row, 6).Value = ev.EventTheme;
+                worksheet.Cell(row, 7).Value = ev.EventCategory;
+                row++;
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Events.xlsx");
+            }
+        }
     }
 }

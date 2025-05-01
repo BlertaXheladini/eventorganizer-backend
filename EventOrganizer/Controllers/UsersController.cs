@@ -1,15 +1,13 @@
-﻿using EventOrganizer.Database;
-using EventOrganizer.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Azure.Core;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authorization;
-
+using EventOrganizer.Database;
+using EventOrganizer.Models;
+using OfficeOpenXml; // Add this to work with EPPlus
 
 namespace EventOrganizer.Controllers
 {
@@ -92,78 +90,32 @@ namespace EventOrganizer.Controllers
             return NoContent();
         }
 
-        [HttpGet]
-        [Route("GetAvailableRoles")]
-        public async Task<IActionResult> GetAvailableRoles()
-        {
-            var roles = await _db.Roles.ToListAsync();
-            return Ok(roles);
-        }
-
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> Register(User objUser)
         {
-            try
+            var dbuser = _db.User.Where(u => u.Email == objUser.Email).FirstOrDefault();
+            if (dbuser != null)
             {
-                // Validate required fields
-                if (string.IsNullOrEmpty(objUser.Email))
-                {
-                    return BadRequest("Email is required");
-                }
-                
-                if (string.IsNullOrEmpty(objUser.Password))
-                {
-                    return BadRequest("Password is required");
-                }
-                
-                if (string.IsNullOrEmpty(objUser.FirstName))
-                {
-                    return BadRequest("First name is required");
-                }
-                
-                if (string.IsNullOrEmpty(objUser.LastName))
-                {
-                    return BadRequest("Last name is required");
-                }
-
-                // Check if email already exists
-                var dbuser = await _db.User.FirstOrDefaultAsync(u => u.Email == objUser.Email);
-                if (dbuser != null)
-                {
-                    return BadRequest("Email already exists");
-                }
-
-                // Check if role exists
-                var existingRole = await _db.Roles.FindAsync(objUser.RoleId);
-                if (existingRole == null)
-                {
-                    // Get available roles to help the user
-                    var availableRoles = await _db.Roles.ToListAsync();
-                    var roleIds = string.Join(", ", availableRoles.Select(r => r.Id));
-                    
-                    return BadRequest($"Role with ID {objUser.RoleId} does not exist. Available role IDs are: {roleIds}");
-                }
-
-                // Set role
-                objUser.Role = existingRole;
-                objUser.RefreshTokenExpiryTime = DateTime.UtcNow;
-
-                // Hash password
-                string salt = BCrypt.Net.BCrypt.GenerateSalt();
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(objUser.Password, salt);
-                objUser.Password = hashedPassword;
-
-                // Add user to database
-                _db.User.Add(objUser);
-                await _db.SaveChangesAsync();
-                
-                return Ok("Registration successful");
+                return BadRequest("Emaili ekziston");
             }
-            catch (Exception ex)
+
+            var exisstingState = await _db.Roles.FindAsync(objUser.RoleId);
+            if (exisstingState == null)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return NotFound($"Roli me ID {objUser.Role.Id} nuk ekziston");
             }
+
+            objUser.Role = exisstingState;
+            objUser.RefreshTokenExpiryTime = objUser.RefreshTokenExpiryTime ?? DateTime.UtcNow;
+
+            string salt = BCrypt.Net.BCrypt.GenerateSalt();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(objUser.Password, salt);
+
+            objUser.Password = hashedPassword;
+            _db.User.Add(objUser);
+            await _db.SaveChangesAsync();
+            return Ok("Regjistrimi u shtua me sukses.");
         }
 
         [HttpPost]
@@ -199,10 +151,10 @@ namespace EventOrganizer.Controllers
 
             var claims = new[]
             {
-                 new Claim(ClaimTypes.Name, user.Email),
-                 new Claim(ClaimTypes.Role, existinState.Name),
-                 new Claim(ClaimTypes.NameIdentifier,user.Id.ToString())
-             };
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, existinState.Name),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSecretKeyWithAtLeast16Characters"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -227,7 +179,6 @@ namespace EventOrganizer.Controllers
                 return BadRequest("Invalid or expired refresh token.");
             }
 
-
             var newTokens = GenerateTokens(userInDb);
             userInDb.RefreshToken = newTokens.RefreshToken;
             await _db.SaveChangesAsync();
@@ -235,5 +186,59 @@ namespace EventOrganizer.Controllers
             return Ok(new { AccessToken = newTokens.AccessToken, RefreshToken = newTokens.RefreshToken });
         }
 
+        [HttpGet]
+        [Route("ExportUsersToExcel")]
+        public async Task<IActionResult> ExportUsersToExcel()
+        {
+            // Get all users with their roles
+            var users = await _db.User
+                .Include(u => u.Role)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Password,
+                    RoleName = u.Role.Name,
+                    u.RefreshToken,
+                    u.RefreshTokenExpiryTime
+                })
+                .ToListAsync();
+
+            // Create a new Excel package using EPPlus
+            using (var package = new ExcelPackage())
+            {
+                // Add a worksheet to the package
+                var worksheet = package.Workbook.Worksheets.Add("Users");
+
+                // Add headers to the first row
+                worksheet.Cells[1, 1].Value = "ID";
+                worksheet.Cells[1, 2].Value = "First Name";
+                worksheet.Cells[1, 3].Value = "Last Name";
+                worksheet.Cells[1, 4].Value = "Email";
+                worksheet.Cells[1, 5].Value = "Role";
+                worksheet.Cells[1, 6].Value = "Refresh Token";
+                worksheet.Cells[1, 7].Value = "Refresh Token Expiry Time";
+
+                // Add data to the worksheet
+                int row = 2; // Starting from the second row
+                foreach (var user in users)
+                {
+                    worksheet.Cells[row, 1].Value = user.Id;
+                    worksheet.Cells[row, 2].Value = user.FirstName;
+                    worksheet.Cells[row, 3].Value = user.LastName;
+                    worksheet.Cells[row, 4].Value = user.Email;
+                    worksheet.Cells[row, 5].Value = user.RoleName;
+                    worksheet.Cells[row, 6].Value = user.RefreshToken;
+                    worksheet.Cells[row, 7].Value = user.RefreshTokenExpiryTime?.ToString("yyyy-MM-dd HH:mm:ss"); // Format the date if necessary
+                    row++;
+                }
+
+                // Return the Excel file as a byte array
+                var excelFileContent = package.GetAsByteArray();
+                return File(excelFileContent, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Users.xlsx");
+            }
+        }
     }
 }
