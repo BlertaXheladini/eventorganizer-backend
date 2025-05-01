@@ -77,6 +77,11 @@ builder.Services.AddSwaggerGen(options =>
      });
 });
 
+
+// Add Stripe configuration (Assuming you have an extension method for this)
+builder.Services.AddStripeInfrastructure(builder.Configuration);
+
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
