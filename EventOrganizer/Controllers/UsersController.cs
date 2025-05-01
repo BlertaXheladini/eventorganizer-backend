@@ -181,7 +181,15 @@ namespace EventOrganizer.Controllers
             userInDb.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1);
             await _db.SaveChangesAsync();
 
-            return Ok(new { AccessToken = tokens.AccessToken, RefreshToken = tokens.RefreshToken, RoleId = userInDb.RoleId });
+            return Ok(new
+            {
+                AccessToken = tokens.AccessToken,
+                RefreshToken = tokens.RefreshToken,
+                RoleId = userInDb.RoleId,
+                UserId = userInDb.Id,
+                FirstName = userInDb.FirstName,
+                LastName = userInDb.LastName
+            });
         }
 
         private (string AccessToken, string RefreshToken) GenerateTokens(User user)
