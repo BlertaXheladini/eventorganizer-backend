@@ -4,6 +4,7 @@ using EventOrganizer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EventOrganizer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250430065642_SeedRoleagain")]
+    partial class SeedRoleagain
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,24 +204,6 @@ namespace EventOrganizer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Super Admin"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "MOD"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "User"
-                        });
                 });
 
             modelBuilder.Entity("EventOrganizer.Models.Staff", b =>

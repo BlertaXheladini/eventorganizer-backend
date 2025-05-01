@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using EventOrganizer.Models;
+using System.Data;
 
 namespace EventOrganizer.Database
 {
@@ -67,6 +68,13 @@ namespace EventOrganizer.Database
              v => v.ToDateTime(new TimeOnly()),  // Konverto DateOnly në DateTime
              v => DateOnly.FromDateTime(v)       // Konverto DateTime në DateOnly
              );
+
+
+            modelBuilder.Entity<Roles>().HasData(
+           new Roles { Id = 1, Name = "Super Admin" },
+           new Roles { Id = 2, Name = "MOD" },
+           new Roles { Id = 3, Name = "User"}
+           );
         }
 
         // Add the OnConfiguring method here to suppress warnings
