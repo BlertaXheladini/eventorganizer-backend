@@ -19,6 +19,7 @@ namespace EventOrganizer.Database
         public DbSet<Roles> Roles { get; set; }
         public DbSet<Feedback> Feedback { get; set; }
         public DbSet<Reservations> Reservations { get; set; }
+        public DbSet<Payment> Payment { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,6 +69,12 @@ namespace EventOrganizer.Database
              v => v.ToDateTime(new TimeOnly()),  // Konverto DateOnly në DateTime
              v => DateOnly.FromDateTime(v)       // Konverto DateTime në DateOnly
              );
+
+            modelBuilder.Entity<Payment>()
+          .HasOne(p => p.Reservations)
+          .WithMany()
+          .HasForeignKey(p => p.ReservationId) //Foreign Key
+          .OnDelete(DeleteBehavior.Restrict);
 
 
             modelBuilder.Entity<Roles>().HasData(
