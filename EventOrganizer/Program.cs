@@ -1,3 +1,4 @@
+using EventOrganizer;
 using EventOrganizer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -5,6 +6,8 @@ using MongoDB.Driver;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Stripe;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
