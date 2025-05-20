@@ -8,25 +8,50 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Stripe;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
 
 // Configure Swagger/OpenAPI
-//Check websites to see how swagger works
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+builder.Services.AddSwaggerGen(options =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Event Organizer API", Version = "v1" });
-});
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Event Organizer API",
+        Version = "v1"
+    });
 
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid JWT token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new List<string>()
+        }
+    });
+});
 
 // MongoDB ConnectionString
 var mongoConnectionString = "mongodb://localhost:27017";
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
-
 
 // Configure Database Connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,6 +59,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultDBConnection"));
 });
 
+// Configure JWT Authentication
 builder.Services.AddAuthentication("Bearer")
      .AddJwtBearer("Bearer", options =>
      {
@@ -47,41 +73,8 @@ builder.Services.AddAuthentication("Bearer")
          };
      });
 
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo()
-    {
-        Title = "AuthDemo",
-        Version = "v1"
-    });
-
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    {
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Please enter a token",
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-     {
-         {
-             new OpenApiSecurityScheme
-             {
-                 Reference = new OpenApiReference
-                 {
-                     Type=ReferenceType.SecurityScheme,
-                     Id="Bearer"
-                 }
-             },
-             new List<string>()
-         }
-     });
-});
-
+// Configure Stripe
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
-
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -91,6 +84,8 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
+
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
@@ -104,12 +99,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Event Organizer API V1");
-        c.RoutePrefix = "swagger"; // Swagger do të jetë në root URL
+        c.RoutePrefix = "swagger"; // Swagger will be available at root URL + "/swagger"
     });
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication(); // <-- You had only UseAuthorization(), you need both when using JWT
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

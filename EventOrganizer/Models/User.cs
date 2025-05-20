@@ -20,5 +20,10 @@ namespace EventOrganizer.Models
 
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
+        public string? PasswordResetToken { get; set; }
+
+        public DateTime? PasswordResetTokenExpiryTime { get; set; }
+
+
     }
 }

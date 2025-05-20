@@ -16,10 +16,48 @@ namespace EventOrganizer.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
+        private readonly IEmailSender _emailSender;
 
-        public UsersController(ApplicationDbContext db)
+        public UsersController(ApplicationDbContext db, IEmailSender emailSender)
         {
             _db = db;
+            _emailSender = emailSender;
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Find the user by email
+            var user = await _db.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                // Do not    reveal user existence to prevent info leakage
+                return Ok("Password reset email sent.");
+            }
+
+            // Generate a token - example using a GUID (you can use JWT or other token)
+            var token = Guid.NewGuid().ToString();
+
+            // Save the token to the user record, or to a separate password reset tokens table
+            user.PasswordResetToken = token;
+            user.PasswordResetTokenExpiryTime = DateTime.UtcNow.AddHours(1); // token valid for 1 hour
+            await _db.SaveChangesAsync();
+
+            // Generate a callback URL including the userId and token
+            var callbackUrl = Url.Action("ResetPassword", "Account",
+                new { userId = user.Id, token = token }, protocol: Request.Scheme);
+
+            // Send email with the reset link
+            await _emailSender.SendEmailAsync(
+                email,
+                "Reset Your Password",
+                $@"Please reset your password by clicking here:
+                <a href='{callbackUrl}'>Reset Password</a>");
+
+            return Ok("Password reset email sent.");
         }
 
         [HttpGet]
